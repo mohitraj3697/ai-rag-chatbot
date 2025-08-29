@@ -42,7 +42,7 @@ async function generate(text) {
 }
 
 async function callServer(inputText) {
-  const response = await fetch('http://localhost:3001/chat', {
+  const response = await fetch('https://ai-rag-chatbot-backend.onrender.com', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ message: inputText }),
