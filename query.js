@@ -1,0 +1,108 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const History = [];
+
+async function transformQuery(question){
+
+History.push({
+    role:'user',
+    parts:[{text:question}]
+    })  
+
+const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: History,
+    config: {
+      systemInstruction: `You are a query rewriting expert. Based on the provided chat history, rephrase the "Follow Up user Question" into a complete, standalone question that can be understood without the chat history.
+    Only output the rewritten question and nothing else.
+      `,
+    },
+ });
+ 
+ History.pop()
+ 
+ return response.text
+
+
+}
+
+
+
+export async function genrate(userProblem) {
+  try {
+    userProblem = userProblem.trim();
+    if (!userProblem) return "⚠️ Please enter a valid question.";
+
+    // Rewrite question to be standalone
+    const standaloneQuestion = await transformQuery(userProblem);
+
+    // Convert question to vector
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GEMINI_API_KEY,
+      model: 'text-embedding-004',
+    });
+    const queryVector = await embeddings.embedQuery(standaloneQuestion);
+
+    // Query Pinecone DB
+    const pinecone = new Pinecone();
+    const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
+
+    const searchResults = await pineconeIndex.query({
+      topK: 10,
+      vector: queryVector,
+      includeMetadata: true,
+    });
+
+    // Create context
+    const context = searchResults.matches.length > 0
+      ? searchResults.matches.map(match => match.metadata.text).join("\n\n---\n\n")
+      : null;
+
+    // Add user message to history
+    History.push({
+      role: 'user',
+      parts: [{ text: standaloneQuestion}]
+    });
+
+    // Generate answer from Gemini
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: History,
+      config: {
+        systemInstruction: `You are a chatbot named Bit Buddy, You are a RAG-based AI bot. you are part of BITP students community, made and developed by Mohit Raj,you are made to help the student of BIT Mesra student.
+ mohit raj is a 2nd-year CSE student at BIT Mesra. 
+Answer using ONLY the context below. If no context, say: "I could not find the answer in my vector knowledgebase."
+
+Context: ${context || "[No context available]"}`,
+      },
+    });
+
+    // Debug raw response
+    console.log("Raw Gemini response:", JSON.stringify(response, null, 2));
+
+    // Extract answer from candidates
+    let answer = "⚠️ Something went wrong while generating response.";
+    if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      answer = response.candidates[0].content.parts[0].text;
+    } else if (!context) {
+      answer = "I could not find the answer in my vector knowledgebase.";
+    }
+
+    // Add model response to history
+    History.push({
+      role: 'model',
+      parts: [{ text: answer }]
+    });
+
+    return answer;
+  } catch (err) {
+    console.error("Error in genrate():", err);
+    return "⚠️ Something went wrong while generating response.";
+  }
+}
