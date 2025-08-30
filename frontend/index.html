@@ -20,23 +20,18 @@
     </nav>
   </header>
 
-  <!-- Chat Section -->
+  <!-- Chat Container -->
   <main class="flex-1 flex flex-col overflow-hidden p-4">
-    <!-- Chat messages -->
-    <div id="chat-container" 
-         class="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg bg-yellow-100 border border-yellow-200">
-      <!-- Messages will be injected here -->
+    <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 rounded-lg bg-yellow-100 border border-yellow-200">
+      <!-- Messages go here -->
     </div>
 
     <!-- Input Area -->
-    <form id="chat-form" class="flex mt-4">
+    <div class="flex mt-4">
       <input id="input" type="text" placeholder="Ask Bit Buddy something..."
         class="flex-1 p-3 rounded-l-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600"/>
-      <button id="ask" type="submit"
-        class="bg-red-700 text-white p-3 rounded-r-xl hover:bg-red-800 transition-colors">
-        Send
-      </button>
-    </form>
+      <button id="ask" class="bg-red-700 text-white p-3 rounded-r-xl hover:bg-red-800 transition-colors">Send</button>
+    </div>
   </main>
 
   <!-- Footer -->
@@ -44,7 +39,6 @@
     by BITP student community
   </footer>
 
-  <!-- Chat Script -->
   <script src="script.js"></script>
 </body>
 </html>
