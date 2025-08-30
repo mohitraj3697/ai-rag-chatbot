@@ -46,9 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Call backend API
+  // Call backend API (Vercel serverless function)
   async function callServer(inputText) {
-    const response = await fetch('https://ai-rag-chatbot-one.vercel.app/api/chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

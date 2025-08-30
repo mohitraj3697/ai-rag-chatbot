@@ -1,37 +1,26 @@
-import express from 'express';
-import cors from 'cors';
-import { genrate } from './query.js';  // keep your backend RAG file as query.js
+import { genrate } from '../../query.js';  // adjust path if query.js is in root
 
-const app = express();
-const port = process.env.PORT || 3001;
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    try {
+      const { message } = req.body;
 
-// middlewares
-app.use(express.json());
-app.use(cors()); // allow frontend running on another port
+      if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+      }
 
-// test route
-app.get('/', (req, res) => {
-  res.send('Welcome to the server of Movi');
-});
+      console.log('Incoming message:', message);
 
-// chat route
-app.post('/chat', async (req, res) => {
-  try {
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+      const result = await genrate(message);
+      return res.status(200).json({ message: result });
+    } catch (err) {
+      console.error('Error in /api/chat:', err);
+      return res.status(500).json({ error: 'Something went wrong' });
     }
-
-    console.log('Incoming message:', message);
-
-    const result = await genrate(message);  // call backend function
-    res.json({ message: result });
-  } catch (err) {
-    console.error('Error in /chat:', err);
-    res.status(500).json({ error: 'Something went wrong' });
+  } else if (req.method === 'GET') {
+    return res.status(200).send('Welcome to the server of Movi');
+  } else {
+    res.setHeader('Allow', ['POST', 'GET']);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
-});
-
-app.listen(port, () => {
-  console.log(`✅ Server is listening on http://localhost:${port}`);
-});
+}
