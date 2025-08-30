@@ -12,12 +12,15 @@ import { PineconeStore } from '@langchain/pinecone';
 
 async function indexDocument() {
 
-const PDF_PATH = './s.pdf';
+const PDF_PATH = './s22.pdf';
 const pdfLoader = new PDFLoader(PDF_PATH);
 const rawDocs = await pdfLoader.load();
 
 
-// chunk
+console.log("PDF loaded successfully");
+
+
+// cunk
 
     const textSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,

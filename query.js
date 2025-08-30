@@ -39,54 +39,61 @@ export async function genrate(userProblem) {
     userProblem = userProblem.trim();
     if (!userProblem) return "⚠️ Please enter a valid question.";
 
-    // Rewrite question to be standalone
+    // standalone ques mai convert
     const standaloneQuestion = await transformQuery(userProblem);
 
-    // Convert question to vector
+    // question to vector
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
       model: 'text-embedding-004',
     });
     const queryVector = await embeddings.embedQuery(standaloneQuestion);
 
-    // Query Pinecone DB
+    // pinecone db
+
+
+
+
     const pinecone = new Pinecone();
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
     const searchResults = await pineconeIndex.query({
-      topK: 10,
+      topK: 50,
       vector: queryVector,
       includeMetadata: true,
     });
 
-    // Create context
+    // context banega pinecone se
     const context = searchResults.matches.length > 0
       ? searchResults.matches.map(match => match.metadata.text).join("\n\n---\n\n")
       : null;
 
-    // Add user message to history
+    // user messsage ko history mai push karo
     History.push({
       role: 'user',
       parts: [{ text: standaloneQuestion}]
     });
 
-    // Generate answer from Gemini
+    //   Gemini  
+
+
+
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents: History,
       config: {
         systemInstruction: `You are a chatbot named Bit Buddy, You are a RAG-based AI bot. you are part of BITP students community, made and developed by Mohit Raj,you are made to help the student of BIT Mesra student.
  mohit raj is a 2nd-year CSE student at BIT Mesra. 
-Answer using ONLY the context below. If no context, say: "I could not find the answer in my vector knowledgebase."
+Answer the question with the help of context you can also use external sources but answer with the context. If no context, say: "I could not find the answer in my vector knowledgebase."
 
 Context: ${context || "[No context available]"}`,
       },
     });
 
-    // Debug raw response
+    // json
     console.log("Raw Gemini response:", JSON.stringify(response, null, 2));
 
-    // Extract answer from candidates
+    // answer from candidates
     let answer = "⚠️ Something went wrong while generating response.";
     if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
       answer = response.candidates[0].content.parts[0].text;
@@ -94,7 +101,7 @@ Context: ${context || "[No context available]"}`,
       answer = "I could not find the answer in my vector knowledgebase.";
     }
 
-    // Add model response to history
+    // model response ko history mai push karo
     History.push({
       role: 'model',
       parts: [{ text: answer }]
