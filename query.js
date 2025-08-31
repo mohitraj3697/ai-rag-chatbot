@@ -40,14 +40,14 @@ export async function genrate(userProblem) {
     if (!userProblem) return "⚠️ Please enter a valid question.";
 
     // standalone ques mai convert
-    const standaloneQuestion = await transformQuery(userProblem);
+    //const standaloneQuestion = await transformQuery(userProblem);
 
     // question to vector
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
       model: 'text-embedding-004',
     });
-    const queryVector = await embeddings.embedQuery(standaloneQuestion);
+    const queryVector = await embeddings.embedQuery(userProblem);
 
     // pinecone db
 
@@ -71,7 +71,7 @@ export async function genrate(userProblem) {
     // user messsage ko history mai push karo
     History.push({
       role: 'user',
-      parts: [{ text: standaloneQuestion}]
+      parts: [{ text: userProblem }]
     });
 
     //   Gemini  
@@ -82,11 +82,11 @@ export async function genrate(userProblem) {
       model: "gemini-2.0-flash",
       contents: History,
       config: {
-        systemInstruction: `You are a chatbot named Bit Buddy, You are a RAG-based AI bot. you are part of BITP students community, made and developed by Mohit Raj,you are made to help the student of BIT Mesra student.
- mohit raj is a 2nd-year CSE student at BIT Mesra. 
-Answer the question with the help of context you can also use external sources but answer with the context. If no context, say: "I could not find the answer in my vector knowledgebase."
+        systemInstruction: `You are a chatbot named Bit Buddy, You are a AI bot. you are part of BITP students community, made and developed by BITP student community,you are made to help the student of BIT patna students.
+ 
+Answer the question with the help of context you can also use external sources. If no context, take the help of external sources. 
 
-Context: ${context || "[No context available]"}`,
+Context: ${context}`,
       },
     });
 
